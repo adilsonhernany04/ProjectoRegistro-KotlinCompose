@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaLogin(
     aoFazerLogin: (email: String, palPasse: String) -> Unit,
@@ -15,47 +16,62 @@ fun TelaLogin(
     var email by remember { mutableStateOf("") }
     var palPasse by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text("Login - Admin", style = MaterialTheme.typography.headlineSmall)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Login - Admin") }
+            )
+        },
 
-        Spacer(modifier = Modifier.height(26.dp))
+    ) { padding ->
 
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(35.dp),
 
-        TextField(
-            value = palPasse,
-            onValueChange = { palPasse = it },
-            label = { Text("Palavra-passe") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                aoFazerLogin(email, palPasse)
-            },
-            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Entrar")
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
-        TextButton(onClick = aoNavegarParaRegistro) {
-            Text("Criar conta")
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(25.dp))
+
+            TextField(
+                value = palPasse,
+                onValueChange = { palPasse = it },
+                label = { Text("Palavra-passe") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier
+                .height(20.dp))
+
+            Button(
+                onClick = {
+                    aoFazerLogin(email, palPasse)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+
+            ) {
+                Text("Entrar")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(onClick = aoNavegarParaRegistro) {
+                Text("Ver Dev")
+            }
         }
     }
 }
