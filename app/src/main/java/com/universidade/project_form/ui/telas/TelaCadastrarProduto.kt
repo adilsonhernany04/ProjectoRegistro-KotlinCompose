@@ -6,68 +6,43 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.universidade.project_form.modelos.Categoria
 import com.universidade.project_form.modelos.Produto
 import kotlinx.coroutines.launch
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.OutlinedTextFieldDefaults
 
 @Composable
 fun TelaCadastrarProduto(
     aoRegistrarProduto: (Produto) -> Unit,
     aoVoltar: () -> Unit
 ) {
+
+    // ----- ESTADOS -----
     var nome by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf<Categoria?>(null) }
     var descricao by remember { mutableStateOf("") }
     var preco by remember { mutableStateOf("") }
-
     var imagemUri by remember { mutableStateOf<String?>(null) }
 
-    // estado do dropdown
+    // dropdown
     var categoriaExpanded by remember { mutableStateOf(false) }
 
     // snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // launcher para escolher imagem
+    // launcher estabilizado
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -77,12 +52,7 @@ fun TelaCadastrarProduto(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Adicionar Produto") },
-                /* navigationIcon = {
-                    IconButton(onClick = aoVoltar) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                    }
-                }*/
+                title = { Text("Adicionar Produto") }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -98,7 +68,27 @@ fun TelaCadastrarProduto(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ========== IMAGEM ==========
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clickable { launcher.launch("image/*") },
+                contentAlignment = Alignment.Center
+            ) {
+                if (imagemUri == null) {
+                    Text("Clique para adicionar imagem")
+                } else {
+                    AsyncImage(
+                        model = remember(imagemUri) { imagemUri },
+                        contentDescription = "Imagem do produto",
+                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
 
+            Spacer(modifier = Modifier.height(20.dp))
 
             // ========== Nome ==========
             OutlinedTextField(
@@ -110,13 +100,14 @@ fun TelaCadastrarProduto(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ========== Categoria com ExposedDropdownMenuBox (com cores de exemplo) ==========
+            // ========== Dropdown Categorias ==========
             ExposedDropdownMenuBox(
                 expanded = categoriaExpanded,
-                onExpandedChange = { categoriaExpanded = !categoriaExpanded }
+                onExpandedChange = { expanded -> categoriaExpanded = expanded }
             ) {
+
                 OutlinedTextField(
-                    value = categoria?.mostrarNome ?: "",
+                    value = categoria?.mostrarNome ?: "Seleccione a categoria",
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Categoria") },
@@ -127,12 +118,8 @@ fun TelaCadastrarProduto(
                         .menuAnchor()
                         .fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFEDE7F6),
-                        unfocusedContainerColor = Color(0xFFF3E5F5),
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.DarkGray,
-                        focusedBorderColor = Color(0xFF6A1B9A),
-                        unfocusedBorderColor = Color(0xFF9C27B0)
+
+
                     )
                 )
 
@@ -169,14 +156,52 @@ fun TelaCadastrarProduto(
                 value = preco,
                 onValueChange = { preco = it },
                 label = { Text("Preço") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+
+
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ========== Botão Cadastrar ==========
+            // ========== Botão ==========
             Button(
-                onClick = {},
+                onClick = {
+                    when {
+                        nome.isBlank() -> {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Nome não pode estar vazio")
+                            }
+                        }
+                        categoria == null -> {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Selecione uma categoria")
+                            }
+                        }
+                        preco.toDoubleOrNull() == null -> {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Preço inválido")
+                            }
+                        }
+                        else -> {
+                            aoRegistrarProduto(
+                                Produto(
+                                    nome = nome,
+                                    categoria = categoria!!.toString(),
+                                    descricao = descricao,
+                                    preco = preco.toDouble(),
+                                    imagem = imagemUri
+                                )
+                            )
+
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Produto cadastrado com sucesso!",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
             ) {
